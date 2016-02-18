@@ -1,0 +1,134 @@
+<?php 
+
+Yii::app()->clientScript->registerCoreScript('jquery');
+
+$baseUrl    = Yii::app()->baseUrl; 
+$cs         = Yii::app()->getClientScript();
+
+$cs->registerScriptFile($baseUrl.'/js/mask_money.js');
+
+$this->breadcrumbs=array(	
+	'Personalia' 	=> array('/site/personalia'),
+	'Gaji dan Upah'	=> array('/site/gaji'),
+	'Gaji Bulanan' 	=> array('/site/bulanan'),
+	'Gaji Bulanan'  => array('/site/perhitungan'),
+	'Pilih Proyek'	=> array('/site/potongan'),
+	'Potongan'      => array('/personalia/TbPenggajian/potongan?proyek='.$proyek),	
+	'Kasbon Karyawan'
+); 
+
+$url 		= Yii::app()->createUrl('site/potongan');
+$ajaxUrl1	= Yii::app()->createUrl('personalia/TbKaryawan/get');
+
+foreach(Yii::app()->user->getFlashes() as $key => $message) {
+    echo '<div class="flash-' . $key . '">' . $message . "</div>\n";
+}
+
+?>
+
+<?php $form = $this->beginWidget('CActiveForm', array('id'=>'tb-kasbon-form','enableAjaxValidation'=>false)); ?>
+
+<table>
+	<tr>
+		<th>NIK</th>
+		<td>
+			<input name="nik" id="nikField" value="<?php echo $nik; ?>">
+			&nbsp;
+			<a class="small-button" href="#" id="buttonLinkSearch">Search</a>
+		</td>
+	</tr>
+</table>
+
+<input name="action" id="actionField" hidden="true">
+
+<?php 
+	echo $form->textField($kasbon,'NIK',array('value'=>$nik,'hidden'=>'true')); 
+	echo $form->textField($kasbon,'proyek',array('value'=>$proyek,'hidden'=>'true')); 
+?>
+
+<div class="litle-font">
+
+<?php 
+$this->widget(
+	'zii.widgets.jui.CJuiTabs',
+	array(
+  	'tabs' => array(  
+		'Data Karyawan'	=> array('content' => $this->renderPartial(
+			'_data_karyawan',
+			array(
+				'nama' 				=> $nama,
+				'form' 				=> $form,
+				'kasbon'			=> $kasbon,
+				'jabatan' 			=> $jabatan,
+				'keterangan'		=> $keterangan,
+				'departemen' 		=> $departemen,
+				'masa_kerja' 		=> $masa_kerja,								
+				'besar_potongan'	=> $besar_potongan,
+				'plafond_kasbon' 	=> $plafond_kasbon,
+				'pengajuan_kasbon'	=> $pengajuan_kasbon,
+				'masa_kerja_tahun' 	=> $masa_kerja_tahun,
+				'masa_kerja_bulan'	=> $masa_kerja_bulan,
+			),
+			TRUE
+		)),
+		'Pengembalian'	=> array('content' => $this->renderPartial('_pengembalian',array(
+				'kasbon' 			=> $kasbon,
+				'pengembalians'		=> $pengembalians,
+				'besar_potongan' 	=> $besar_potongan,
+			),
+			TRUE
+		)),      
+  	),    
+    'options' 	=> array('collapsible'=>true,'selected'=>0),
+    'id' 		=> 'MyTab-Menu',    
+	)
+); 
+?>
+
+</div>
+
+<?php echo CHtml::submitButton($kasbon->isNewRecord ? 'Create' : 'Save',array('id'=>'buttonSubmit','hidden'=>'true')); ?>
+
+<?php $this->endWidget(); ?>
+
+<br>
+
+<a class="small-button" href="#" id="buttonLinkSubmit">Submit</a>
+<a class="small-button" href="#">Edit</a>
+<a class="small-button" href="<?php echo $url; ?>">Cancel</a>
+
+<script>	
+
+function money(n) {
+    return n.replace(/./g, function(c, i, a) {
+        return i > 0 && c !== "." && (a.length - i) % 3 === 0 ? "." + c : c;
+    });
+}
+
+$('#buttonLinkSubmit').click(function(){
+	$('#actionField').val('submit');
+
+	var number = $('#pengajuan_kasbonField2').val();
+	var number = number.replace(/\./g,'');
+
+	$('#pengajuan_kasbonField').val(number);
+
+	var_plafond_kasbonField = $('#plafond_kasbonField').val();
+	var_pengajuan_kasbon 	= $('#pengajuan_kasbonField').val();	
+
+	$('#besar_potonganField').val(Math.floor((var_plafond_kasbonField-var_pengajuan_kasbon)/12));	
+
+	var besar_potongan 	= $('#besar_potonganField').val();
+	var format 		 	= money(besar_potongan);
+	
+	$('#besar_potonganField2').val(format);
+
+	$('#convert_pinjaman').click();	
+});
+
+$('#buttonLinkSearch').click(function(){
+	$('#actionField').val('search');
+	$('#buttonSubmit').click();
+});
+
+</script>
